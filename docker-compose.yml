@@ -1,0 +1,23 @@
+services:
+  sorter:
+    build: .
+    image: switch-log-sorter:latest
+    ports:
+      - "8000:8000"
+    environment:
+      LOGS_DIR: /data/logs
+      TEMP_DIR: /data/tmp
+      RESULTS_DIR: /data/results
+      QUOTA_BYTES: "268435456"   # 临时盘配额 256 MiB
+      BATCH_BYTES: "8388608"     # 每批 8 MiB 排序落盘
+      MAX_WORKERS: "4"           # 最大并行作业数
+      TS_FIELD: ts_ms            # 时间戳字段
+    volumes:
+      - ./logs:/data/logs:ro          # 只读日志目录（NDJSON 输入）
+      - sorter-tmp:/data/tmp          # 分片与未完成输出（计入配额）
+      - sorter-results:/data/results  # 完整结果
+    restart: unless-stopped
+
+volumes:
+  sorter-tmp:
+  sorter-results:
